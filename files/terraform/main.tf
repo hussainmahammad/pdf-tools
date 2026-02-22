@@ -1,5 +1,11 @@
+locals {
+  prefix = "${var.project_name}-${var.owner}-${var.environment}-${var.build_id}"
+}
+
+/* ================= IAM ROLE ================= */
+
 resource "aws_iam_role" "lambda_role" {
-  name = "${var.project}-${var.env}-lambda-role"
+  name = "${local.prefix}-lambda-role"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -12,6 +18,8 @@ resource "aws_iam_role" "lambda_role" {
     }]
   })
 }
+
+/* ================= POLICIES ================= */
 
 resource "aws_iam_role_policy_attachment" "basic" {
   role       = aws_iam_role.lambda_role.name
