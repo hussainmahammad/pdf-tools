@@ -43,16 +43,30 @@ pipeline {
                      credentialsId: 'account-c-aws']
                 ]) {
                     sh '''
-                    cd files/terraform
+                    # ================= PACKAGE LAMBDA (Required for destroy) =================
+                    echo "Packaging Lambda functions for Terraform..."
+
+                    cd app/functions/upload
+                    zip -r ../upload.zip . >/dev/null
+
+                    cd ../process
+                    zip -r ../process.zip . >/dev/null
+
+                    # ================= TERRAFORM DESTROY =================
+                    cd ../../../files/terraform
 
                     terraform init
 
-                    # Read build_id from state
-                    BUILD_ID=$(terraform output -raw build_id)
+                    # Try to read build_id from state (may not exist for old deployments)
+                    BUILD_ID=$(terraform output -raw build_id 2>/dev/null || echo "")
 
-                    echo "Destroying resources created by build: $BUILD_ID"
-
-                    terraform destroy -var="build_id=$BUILD_ID" -auto-approve
+                    if [ -n "$BUILD_ID" ]; then
+                        echo "Destroying resources created by build: $BUILD_ID"
+                        terraform destroy -var="build_id=$BUILD_ID" -auto-approve
+                    else
+                        echo "No build_id found in state. Destroying without build_id variable."
+                        terraform destroy -auto-approve
+                    fi
                     '''
                 }
 
