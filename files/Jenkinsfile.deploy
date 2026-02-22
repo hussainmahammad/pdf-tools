@@ -6,6 +6,14 @@ pipeline {
         BUILD_ID   = "${env.BUILD_NUMBER}"
     }
 
+parameters {
+  choice(
+    name: 'DEPLOY_TARGET',
+    choices: ['generic', 'NA'],
+    description: 'Deployment type'
+  )
+}
+
     stages {
 
         /* ================= PREPARE ================= */
