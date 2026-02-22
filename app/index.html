@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDFTools | Professional Suite</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<header class="ultra-header">
+    <div class="header-container">
+        <div class="header-left">
+            <div class="logo">PDF<span>Tools</span></div>
+        </div>
+        
+        <div class="header-center">
+            <div class="v-divider"></div>
+            <div class="centered-content">
+                <span class="main-heading">All-in-One PDF Tools</span>
+                <span class="dot"></span>
+                <span class="sub-heading">Merge, Split, Lock & Unlock PDFs instantly in your browser</span>
+            </div>
+        </div>
+
+        <div class="header-right">
+            <div class="status-indicator">
+                <span class="pulse"></span>
+                System Ready
+            </div>
+        </div>
+    </div>
+</header>
+
+<main class="container">
+
+    <section class="action-header">
+        <h2>Select a tool to get started</h2>
+    </section>
+
+    <section class="tools-grid">
+
+        <input type="radio" name="tool" id="lock">
+        <label for="lock" class="tool-card">
+            <div class="icon-box purple">
+                <img src="icons/lock.png">
+            </div>
+            <h3>Lock PDF</h3>
+        </label>
+
+        <input type="radio" name="tool" id="unlock">
+        <label for="unlock" class="tool-card">
+            <div class="icon-box blue">
+                <img src="icons/unlock.png">
+            </div>
+            <h3>Unlock PDF</h3>
+        </label>
+
+        <input type="radio" name="tool" id="merge">
+        <label for="merge" class="tool-card">
+            <div class="icon-box blue">
+                <img src="icons/merge-files.png">
+            </div>
+            <h3>Merge PDF</h3>
+        </label>
+
+        <input type="radio" name="tool" id="split">
+        <label for="split" class="tool-card">
+            <div class="icon-box purple">
+                <img src="icons/split-files.png">
+            </div>
+            <h3>Split PDF</h3>
+        </label>
+
+    </section>
+
+    <!-- Password -->
+    <div id="passwordContainer" style="display:none; text-align:center; margin-top:30px;">
+        <input type="password" id="password" placeholder="Enter password"
+        style="padding:12px 20px; border-radius:10px; border:1px solid #ccc; width:260px;">
+    </div>
+
+    <!-- Split Range Input -->
+    <div id="rangeContainer" style="display:none; text-align:center; margin-top:15px;">
+        <input type="text" id="pageRanges"
+        placeholder="Enter page ranges (e.g. 1-10,12,13,15-20)"
+        style="padding:12px 20px; border-radius:10px; border:1px solid #ccc; width:320px;">
+    </div>
+
+    <!-- Upload -->
+    <section class="upload-section">
+        <div class="glass-upload-box" onclick="document.getElementById('fileInput').click()">
+            <div class="cloud-icon">
+                <img src="icons/upload.png">
+            </div>
+            <p>Drag & Drop your PDF <br> <span>or Click to Upload</span></p>
+            <input type="file" id="fileInput" hidden multiple>
+        </div>
+    </section>
+
+    <div id="fileList" style="text-align:center; margin-top:15px; color:#475569; font-size:14px;"></div>
+
+    <div class="footer-button-container">
+        <button class="btn-main" onclick="processPDF()">Proceed to Process</button>
+    </div>
+
+    <h3 id="result" style="text-align:center; margin-top:20px;"></h3>
+
+</main>
+
+<script>
+const API_BASE = "https://4li5ya6b4f.execute-api.us-east-1.amazonaws.com/prod";
+
+function getSelectedOperation() {
+    if (document.getElementById("lock").checked) return "lock";
+    if (document.getElementById("unlock").checked) return "unlock";
+    if (document.getElementById("merge").checked) return "merge";
+    if (document.getElementById("split").checked) return "split";
+    return null;
+}
+
+// Tool change behavior
+document.querySelectorAll('input[name="tool"]').forEach(radio => {
+    radio.addEventListener("change", () => {
+        const op = getSelectedOperation();
+
+        const passwordContainer = document.getElementById("passwordContainer");
+        const rangeContainer = document.getElementById("rangeContainer");
+
+        passwordContainer.style.display = "none";
+        rangeContainer.style.display = "none";
+
+        if (op === "lock" || op === "unlock") {
+            passwordContainer.style.display = "block";
+        }
+        else if (op === "split") {
+            rangeContainer.style.display = "block";
+        }
+    });
+});
+
+// Show selected files
+document.getElementById("fileInput").addEventListener("change", function() {
+    const files = this.files;
+    const listDiv = document.getElementById("fileList");
+
+    if (files.length === 0) {
+        listDiv.innerHTML = "";
+        return;
+    }
+
+    let names = [];
+    for (let file of files) {
+        names.push(file.name);
+    }
+
+    listDiv.innerHTML = "<b>Selected Files:</b><br>" + names.join("<br>");
+});
+
+async function processPDF() {
+    const files = document.getElementById("fileInput").files;
+    const operation = getSelectedOperation();
+    const password = document.getElementById("password").value;
+    const ranges = document.getElementById("pageRanges").value;
+
+    if (!operation) {
+        alert("Please select a tool");
+        return;
+    }
+
+    if (files.length === 0) {
+        alert("Select file");
+        return;
+    }
+
+    if ((operation === "lock" || operation === "unlock") && password === "") {
+        alert("Please enter password");
+        return;
+    }
+
+    document.getElementById("result").innerText = "Uploading and processing...";
+
+    let fileKeys = [];
+
+    try {
+        for (let file of files) {
+            let res = await fetch(API_BASE + "/upload-url", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    filename: file.name
+                })
+            });
+
+            let data = await res.json();
+
+            await fetch(data.upload_url, {
+                method: "PUT",
+                headers: { "Content-Type": "application/pdf" },
+                body: file
+            });
+
+            fileKeys.push(data.file_key);
+        }
+
+        let processRes = await fetch(API_BASE + "/process", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                operation: operation,
+                files: fileKeys,
+                password: password,
+                ranges: ranges
+            })
+        });
+
+        let result = await processRes.json();
+
+        if (result.download_url) {
+            document.getElementById("result").innerHTML =
+                `<a href="${result.download_url}" target="_blank">Download File</a>`;
+        } else if (result.files) {
+            let links = result.files.map(u =>
+                `<a href="${u}" target="_blank">Download</a>`
+            ).join("<br>");
+            document.getElementById("result").innerHTML = links;
+        } else if (result.error) {
+            document.getElementById("result").innerText = result.error;
+        } else {
+            document.getElementById("result").innerText = "Something went wrong";
+        }
+
+    } catch (err) {
+        document.getElementById("result").innerText = "Error: " + err;
+    }
+}
+</script>
+
+</body>
+</html>
