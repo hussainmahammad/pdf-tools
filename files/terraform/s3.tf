@@ -14,7 +14,8 @@ resource "aws_s3_account_public_access_block" "account" {
 /* ================= UI BUCKET ================= */
 
 resource "aws_s3_bucket" "ui" {
-  bucket = "${local.prefix}-ui"
+  bucket        = "${local.prefix}-ui"
+  force_destroy = true
 }
 
 
@@ -81,7 +82,8 @@ resource "aws_s3_bucket_cors_configuration" "ui_cors" {
 /* ================= FILE PROCESSING BUCKET ================= */
 
 resource "aws_s3_bucket" "files" {
-  bucket = "${local.prefix}-files"
+  bucket        = "${local.prefix}-files"
+  force_destroy = true
 }
 
 
