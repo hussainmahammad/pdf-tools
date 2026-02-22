@@ -1,65 +1,126 @@
 pipeline {
-  agent any
+    agent { label 'agent-b' }
 
-  stages {
-
-    stage('Package Functions') {
-      steps {
-        sh '''
-        cd app/functions/upload
-        zip -r ../upload.zip .
-
-        cd ../process
-        zip -r ../process.zip .
-        '''
-      }
+    environment {
+        AWS_REGION = 'us-east-1'
     }
 
-    stage('Terraform Apply') {
-      steps {
-        sh '''
-        cd files/terraform
-        terraform init
-        terraform apply -auto-approve
-        '''
-      }
-    }
+    stages {
 
-    stage('Get Outputs') {
-      steps {
-        script {
-          env.UI_BUCKET = sh(
-            script: "cd files/terraform && terraform output -raw ui_bucket",
-            returnStdout: true
-          ).trim()
-
-          env.UI_URL = sh(
-            script: "cd files/terraform && terraform output -raw ui_url",
-            returnStdout: true
-          ).trim()
+        /* ================= PREPARE ================= */
+        stage('Prepare') {
+            steps {
+                echo 'Prepare phase'
+                cleanWs()
+                checkout scm
+                sleep 10
+            }
         }
-      }
-    }
 
-    stage('Upload UI') {
-      steps {
-        sh '''
-        aws s3 sync app/ui s3://$UI_BUCKET --delete
-        '''
-      }
-    }
+        /* ================= BUILD ================= */
+        stage('Build') {
+            steps {
+                echo 'Build phase'
 
-    stage('Print OBS') {
-      steps {
-        sh '''
-        echo "OBS_ENDPOINT=http://${UI_URL}"
-        echo "OBS_METRICS_ENABLED=false"
-        echo "OBS_METRICS_TYPE=NA"
-        echo "OBS_LOG_GROUP=NA"
-        echo "OBS_LOG_GROUP_ACCESS=NA"
-        echo "OBS_LOG_GROUP_ERROR=NA"
-        '''
-      }
+                sh '''
+                echo "Packaging Lambda functions..."
+
+                cd app/functions/upload
+                zip -r ../upload.zip .
+
+                cd ../process
+                zip -r ../process.zip .
+                '''
+
+                sleep 10
+            }
+        }
+
+        /* ================= SETUP ================= */
+        stage('Setup') {
+            steps {
+                echo 'Setup phase'
+
+                withCredentials([
+                    [$class: 'AmazonWebServicesCredentialsBinding',
+                     credentialsId: 'account-c-aws']
+                ]) {
+                    sh '''
+                    cd files/terraform
+                    terraform init
+                    '''
+                }
+
+                sleep 10
+            }
+        }
+
+        /* ================= DEPLOY ================= */
+        stage('Deploy') {
+            steps {
+                echo 'Deploy phase'
+
+                withCredentials([
+                    [$class: 'AmazonWebServicesCredentialsBinding',
+                     credentialsId: 'account-c-aws']
+                ]) {
+                    sh '''
+                    cd files/terraform
+                    terraform apply -auto-approve
+                    '''
+                }
+
+                sleep 10
+            }
+        }
+
+        /* ================= VALIDATE ================= */
+        stage('Validate') {
+            steps {
+                echo 'Validate phase'
+
+                withCredentials([
+                    [$class: 'AmazonWebServicesCredentialsBinding',
+                     credentialsId: 'account-c-aws']
+                ]) {
+                    script {
+                        env.UI_BUCKET = sh(
+                            script: "cd files/terraform && terraform output -raw ui_bucket",
+                            returnStdout: true
+                        ).trim()
+
+                        env.UI_URL = sh(
+                            script: "cd files/terraform && terraform output -raw ui_url",
+                            returnStdout: true
+                        ).trim()
+                    }
+
+                    sh '''
+                    echo "Uploading UI to S3..."
+                    aws s3 sync app/ui s3://$UI_BUCKET --delete
+                    '''
+                }
+
+                sleep 10
+            }
+        }
+
+        /* ================= COMPLETE ================= */
+        stage('Complete') {
+            steps {
+                echo 'Complete phase'
+
+                sh '''
+                echo "OBS_ENDPOINT=http://${UI_URL}"
+                echo "OBS_METRICS_ENABLED=false"
+                echo "OBS_METRICS_TYPE=NA"
+                echo "OBS_LOG_GROUP=NA"
+                echo "OBS_LOG_GROUP_ACCESS=NA"
+                echo "OBS_LOG_GROUP_ERROR=NA"
+                '''
+
+                sleep 10
+            }
+        }
     }
-  }
 }
