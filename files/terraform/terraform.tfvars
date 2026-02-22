@@ -1,3 +1,4 @@
-region  = "us-east-1"
-project = "pdf-tools"
-env     = "dev"
+region       = "us-east-1"
+project_name = "pdf-tools"
+owner        = "hussain"
+environment  = "prod"
