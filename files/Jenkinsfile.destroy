@@ -95,7 +95,6 @@ pipeline {
             steps {
                 echo 'Prepare phase (destroy)'
                 cleanWs()
-                checkout scm
                 sleep 10
             }
         }
