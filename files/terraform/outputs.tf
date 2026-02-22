@@ -12,3 +12,9 @@ output "api_url" {
   description = "API Gateway endpoint"
   value       = aws_apigatewayv2_api.api.api_endpoint
 }
+
+/* ===== Required for destroy pipeline ===== */
+output "build_id" {
+  description = "Jenkins build number used for this deployment"
+  value       = var.build_id
+}
