@@ -5,6 +5,14 @@ pipeline {
         AWS_REGION = 'us-east-1'
     }
 
+parameters {
+  choice(
+    name: 'DEPLOY_TARGET',
+    choices: ['generic', 'NA'],
+    description: 'Deployment type'
+  )
+}
+
     stages {
 
         /* ================= COMPLETE ================= */
