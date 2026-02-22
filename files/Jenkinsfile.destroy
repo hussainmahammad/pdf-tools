@@ -1,1 +1,15 @@
+pipeline {
+  agent any
 
+  stages {
+    stage('Destroy') {
+      steps {
+        sh '''
+        cd files/terraform
+        terraform init
+        terraform destroy -auto-approve
+        '''
+      }
+    }
+  }
+}
