@@ -1,8 +1,22 @@
+/* =====================================================
+   ACCOUNT LEVEL PUBLIC ACCESS (CRITICAL FIX)
+   This allows Terraform to attach public bucket policy
+===================================================== */
+
+resource "aws_s3_account_public_access_block" "account" {
+  block_public_acls       = false
+  ignore_public_acls      = false
+  block_public_policy     = false
+  restrict_public_buckets = false
+}
+
+
 /* ================= UI BUCKET ================= */
 
 resource "aws_s3_bucket" "ui" {
   bucket = "${local.prefix}-ui"
 }
+
 
 /* Public access settings */
 
@@ -15,6 +29,7 @@ resource "aws_s3_bucket_public_access_block" "ui" {
   restrict_public_buckets = false
 }
 
+
 /* Static website hosting */
 
 resource "aws_s3_bucket_website_configuration" "ui" {
@@ -25,10 +40,16 @@ resource "aws_s3_bucket_website_configuration" "ui" {
   }
 }
 
+
 /* Public read policy */
 
 resource "aws_s3_bucket_policy" "ui_public" {
   bucket = aws_s3_bucket.ui.id
+
+  depends_on = [
+    aws_s3_account_public_access_block.account,
+    aws_s3_bucket_public_access_block.ui
+  ]
 
   policy = jsonencode({
     Version = "2012-10-17"
@@ -41,7 +62,8 @@ resource "aws_s3_bucket_policy" "ui_public" {
   })
 }
 
-/* ================= UI CORS (IMPORTANT) ================= */
+
+/* ================= UI CORS ================= */
 
 resource "aws_s3_bucket_cors_configuration" "ui_cors" {
   bucket = aws_s3_bucket.ui.id
@@ -61,6 +83,7 @@ resource "aws_s3_bucket_cors_configuration" "ui_cors" {
 resource "aws_s3_bucket" "files" {
   bucket = "${local.prefix}-files"
 }
+
 
 /* Files bucket CORS (matches your manual config) */
 
