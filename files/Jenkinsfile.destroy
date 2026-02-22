@@ -1,15 +1,82 @@
 pipeline {
-  agent any
+    agent { label 'agent-b' }
 
-  stages {
-    stage('Destroy') {
-      steps {
-        sh '''
-        cd files/terraform
-        terraform init
-        terraform destroy -auto-approve
-        '''
-      }
+    environment {
+        AWS_REGION = 'us-east-1'
     }
-  }
+
+    stages {
+
+        /* ================= COMPLETE ================= */
+        stage('Complete') {
+            steps {
+                echo 'Complete phase (destroy finished)'
+                sleep 10
+            }
+        }
+
+        /* ================= VALIDATE ================= */
+        stage('Validate') {
+            steps {
+                echo 'Validate phase (post-destroy validation)'
+
+                withCredentials([
+                    [$class: 'AmazonWebServicesCredentialsBinding',
+                     credentialsId: 'account-c-aws']
+                ]) {
+                    sh '''
+                    aws sts get-caller-identity
+                    '''
+                }
+
+                sleep 10
+            }
+        }
+
+        /* ================= DEPLOY (Actual Destroy) ================= */
+        stage('Deploy') {
+            steps {
+                echo 'Destroy phase (actual cleanup logic)'
+
+                withCredentials([
+                    [$class: 'AmazonWebServicesCredentialsBinding',
+                     credentialsId: 'account-c-aws']
+                ]) {
+                    sh '''
+                    cd files/terraform
+                    terraform init
+                    terraform destroy -auto-approve
+                    '''
+                }
+
+                sleep 10
+            }
+        }
+
+        /* ================= SETUP ================= */
+        stage('Setup') {
+            steps {
+                echo 'Setup phase (nothing to setup for destroy)'
+                sleep 10
+            }
+        }
+
+        /* ================= BUILD ================= */
+        stage('Build') {
+            steps {
+                echo 'Build phase (nothing to build for destroy)'
+                sleep 10
+            }
+        }
+
+        /* ================= PREPARE ================= */
+        stage('Prepare') {
+            steps {
+                echo 'Prepare phase (destroy)'
+                cleanWs()
+                checkout scm
+                sleep 10
+            }
+        }
+    }
 }
