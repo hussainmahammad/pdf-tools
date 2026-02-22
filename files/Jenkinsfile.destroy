@@ -44,8 +44,15 @@ pipeline {
                 ]) {
                     sh '''
                     cd files/terraform
+
                     terraform init
-                    terraform destroy -auto-approve
+
+                    # Read build_id from state
+                    BUILD_ID=$(terraform output -raw build_id)
+
+                    echo "Destroying resources created by build: $BUILD_ID"
+
+                    terraform destroy -var="build_id=$BUILD_ID" -auto-approve
                     '''
                 }
 
