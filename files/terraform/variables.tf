@@ -1,11 +1,28 @@
 variable "region" {
-  default = "us-east-1"
+  description = "AWS region"
+  type        = string
+  default     = "us-east-1"
 }
 
-variable "project" {
-  default = "pdf-tools"
+variable "project_name" {
+  description = "Project name"
+  type        = string
+  default     = "pdf-tools"
 }
 
-variable "env" {
-  default = "dev"
+variable "owner" {
+  description = "Owner name (used for global uniqueness)"
+  type        = string
+  default     = "hussain"
+}
+
+variable "environment" {
+  description = "Deployment environment"
+  type        = string
+  default     = "prod"
+}
+
+variable "build_id" {
+  description = "Jenkins build number for unique resource naming"
+  type        = string
 }
