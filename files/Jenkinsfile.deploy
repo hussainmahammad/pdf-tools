@@ -3,6 +3,7 @@ pipeline {
 
     environment {
         AWS_REGION = 'us-east-1'
+        BUILD_ID   = "${env.BUILD_NUMBER}"
     }
 
     stages {
@@ -10,7 +11,7 @@ pipeline {
         /* ================= PREPARE ================= */
         stage('Prepare') {
             steps {
-                echo 'Prepare phase'
+                echo "Prepare phase - Build ${BUILD_ID}"
                 cleanWs()
                 checkout scm
                 sleep 10
@@ -23,13 +24,15 @@ pipeline {
                 echo 'Build phase'
 
                 sh '''
+                set -e
+
                 echo "Packaging Lambda functions..."
 
                 cd app/functions/upload
-                zip -r ../upload.zip .
+                zip -r ../upload.zip . > /dev/null
 
                 cd ../process
-                zip -r ../process.zip .
+                zip -r ../process.zip . > /dev/null
                 '''
 
                 sleep 10
@@ -46,6 +49,9 @@ pipeline {
                      credentialsId: 'account-c-aws']
                 ]) {
                     sh '''
+                    set -e
+                    export AWS_DEFAULT_REGION=$AWS_REGION
+
                     cd files/terraform
                     terraform init
                     '''
@@ -58,15 +64,20 @@ pipeline {
         /* ================= DEPLOY ================= */
         stage('Deploy') {
             steps {
-                echo 'Deploy phase'
+                echo "Deploy phase - Build ${BUILD_ID}"
 
                 withCredentials([
                     [$class: 'AmazonWebServicesCredentialsBinding',
                      credentialsId: 'account-c-aws']
                 ]) {
                     sh '''
+                    set -e
+                    export AWS_DEFAULT_REGION=$AWS_REGION
+
                     cd files/terraform
-                    terraform apply -auto-approve
+
+                    terraform apply -auto-approve \
+                      -var="build_id=$BUILD_ID"
                     '''
                 }
 
@@ -96,6 +107,9 @@ pipeline {
                     }
 
                     sh '''
+                    set -e
+                    export AWS_DEFAULT_REGION=$AWS_REGION
+
                     echo "Uploading UI to S3..."
                     aws s3 sync app/ui s3://$UI_BUCKET --delete
                     '''
