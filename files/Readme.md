@@ -56,13 +56,3 @@ PLANKA is [fair-code](https://faircode.io) distributed under the [Fair Use Licen
 - **Enterprise Licenses:** Available for additional features and support
 
 For more details, check the [License Guide](https://github.com/plankanban/planka/blob/master/LICENSES/PLANKA%20License%20Guide%20EN.md).
-
-## Contributing
-
-Found a bug or have a feature request? Check out our [Contributing Guide](https://github.com/plankanban/planka/blob/master/CONTRIBUTING.md) to get started.
-
-For setting up the project locally, see the [development section](https://docs.planka.cloud/docs/category/development/).
-
-**Thanks to all our contributors!**
-
-[![Contributors](https://contrib.rocks/image?repo=plankanban/planka)](https://github.com/plankanban/planka/graphs/contributors)
