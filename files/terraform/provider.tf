@@ -7,12 +7,10 @@ terraform {
   }
 
   backend "s3" {
-    bucket         = "petcart-terraform-state-867809929056"
-    key            = "pdf-tools/prod.tfstate"
-    region         = "us-east-1"
-    encrypt        = true
-    # Uncomment if your other projects use state locking
-    # dynamodb_table = "terraform-locks"
+    bucket  = "hussainmahammad.online-tfstates"
+    key     = "pdf-tools/prod.tfstate"
+    region  = "us-east-1"
+    encrypt = true
   }
 }
 
