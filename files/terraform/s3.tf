@@ -31,6 +31,21 @@ resource "aws_s3_bucket_public_access_block" "ui" {
 }
 
 
+/* =====================================================
+   WAIT FOR AWS CONSISTENCY (FIX FOR INTERMITTENT FAILURE)
+   AWS needs few seconds after disabling public blocks
+===================================================== */
+
+resource "time_sleep" "wait_for_public_access" {
+  depends_on = [
+    aws_s3_account_public_access_block.account,
+    aws_s3_bucket_public_access_block.ui
+  ]
+
+  create_duration = "10s"
+}
+
+
 /* Static website hosting */
 
 resource "aws_s3_bucket_website_configuration" "ui" {
@@ -48,8 +63,7 @@ resource "aws_s3_bucket_policy" "ui_public" {
   bucket = aws_s3_bucket.ui.id
 
   depends_on = [
-    aws_s3_account_public_access_block.account,
-    aws_s3_bucket_public_access_block.ui
+    time_sleep.wait_for_public_access
   ]
 
   policy = jsonencode({
