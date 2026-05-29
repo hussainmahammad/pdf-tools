@@ -6,10 +6,16 @@ terraform {
       version = "~> 5.0"
     }
 
-    # Required for time_sleep (fixes intermittent S3 policy failure)
+    # Required for time_sleep
     time = {
       source  = "hashicorp/time"
       version = "~> 0.9"
+    }
+
+    # Required for random_id
+    random = {
+      source  = "hashicorp/random"
+      version = "~> 3.6"
     }
   }
 
