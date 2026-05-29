@@ -1,5 +1,9 @@
+resource "random_id" "suffix" {
+  byte_length = 4
+}
+
 locals {
-  prefix = "${var.project_name}-${var.owner}-${var.environment}-${var.build_id}"
+  prefix = "${var.project_name}-${var.owner}-${var.environment}-${var.build_id}-${random_id.suffix.hex}"
 }
 
 /* ================= IAM ROLE ================= */
