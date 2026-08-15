@@ -1,58 +1,80 @@
 <div align="center">
 
-  ![Logo](https://raw.githubusercontent.com/plankanban/planka/master/assets/logo.png)
+# PDFTools
 
-  # PLANKA
+_All-in-One PDF Tools — Lock, Unlock, Merge & Split PDFs directly in your browser_
 
-  _Project mastering driven by fun_
+![AWS](https://img.shields.io/badge/AWS-Serverless-orange?style=flat-square)
+![Python](https://img.shields.io/badge/Python-3.11-blue?style=flat-square)
+![Terraform](https://img.shields.io/badge/Terraform-IaC-purple?style=flat-square)
+![Jenkins](https://img.shields.io/badge/Jenkins-CI%2FCD-red?style=flat-square)
 
-  ![Version](https://img.shields.io/github/package-json/v/plankanban/planka?style=flat-square) [![Docker Pulls](https://img.shields.io/badge/docker_pulls-8M%2B-%23066da5?style=flat-square&color=red)](https://github.com/plankanban/planka/pkgs/container/planka) [![Contributors](https://img.shields.io/github/contributors/plankanban/planka?style=flat-square&color=blue)](https://github.com/plankanban/planka/graphs/contributors) [![Chat](https://img.shields.io/discord/1041440072953765979?style=flat-square&logo=discord&logoColor=white)](https://discord.gg/WqqYNd7Jvt)
-
-  [Install](https://docs.planka.cloud/docs/installation/docker/production-version/) ·  [Demo](https://planka.app) · [Docs](https://docs.planka.cloud/docs/welcome/) · [API](https://plankanban.github.io/planka/swagger-ui/) · [Cloud](https://planka.app/pricing) · [Pro version](https://planka.app/pro)
-
-  ![Demo](https://raw.githubusercontent.com/plankanban/planka/master/assets/demo.gif)
+**Lock PDF · Unlock PDF · Merge PDF · Split PDF**
 
 </div>
 
+![PDFTools Architecture](docs/architecture.png)
+
 ## Key Features
 
-- **Collaborative Kanban Boards:** Create projects, boards, lists, cards, and manage tasks with an intuitive drag-and-drop interface
-- **Real-Time Updates:** Instant syncing across all users, no refresh needed
-- **Rich Markdown Support:** Write beautifully formatted card descriptions with a powerful markdown editor
-- **Flexible Notifications:** Get alerts through 100+ providers, fully customizable to your workflow
-- **Seamless Authentication:** Single sign-on with OpenID Connect integration
-- **Multilingual & Easy to Translate:** Full internationalization support for a global audience
+- **Lock PDF:** Protect PDF files with a password
+- **Unlock PDF:** Remove password protection from PDF files
+- **Merge PDF:** Combine multiple PDF files into one
+- **Split PDF:** Split PDF files into separate files
+- **Simple Interface:** Select a tool, upload your PDF, process it, and download the result
+- **Serverless:** Built using AWS serverless services with no traditional application server
 
-## How to Deploy
+## How It Works
 
-PLANKA is easy to install using multiple methods - learn more in the [installation guide](https://docs.planka.cloud/docs/welcome/).
+PDFTools uses a simple serverless workflow:
 
-For configuration and environment settings, see the [configuration section](https://docs.planka.cloud/docs/category/configuration/).
+1. The user opens the PDFTools website hosted on **Amazon S3**.
+2. The user selects **Lock, Unlock, Merge, or Split** and uploads the required PDF file.
+3. The browser sends the request to **Amazon API Gateway**.
+4. API Gateway routes the request to the appropriate **AWS Lambda** function.
+5. Lambda handles the upload or PDF processing operation.
+6. PDF files are stored in **Amazon S3** during the processing workflow.
+7. The processed PDF is returned to the user for download.
 
-Interested in a hosted or [Pro version](https://planka.app/pro) of PLANKA? Check out the pricing on our [website](https://planka.app/pricing).
+## AWS Services
 
-## Notes App
+- **Amazon S3** — Static website hosting and PDF file storage
+- **Amazon API Gateway** — HTTP API for the frontend
+- **AWS Lambda** — Upload and PDF processing functions
+- **AWS Lambda Layer** — PDF processing dependencies
+- **AWS IAM** — Lambda permissions and access control
 
-A testing version of the Notes app is now available on multiple platforms:
+## Infrastructure & Deployment
 
-- **iOS:** Join the [TestFlight](https://testflight.apple.com/join/5eJqTaJW) to try the app
-- **Windows & Android:** Download the app [here](https://planka-notes.hillerdaniel.de)
+- **Terraform** — Provisions and manages AWS infrastructure
+- **Jenkins** — Automates application deployment
+- **AWS CLI** — Used for deployment operations
 
-## Contact
+The deployment pipeline automatically:
 
-For any security issues, please do not create a public issue on GitHub - instead, report it privately by emailing [security@planka.group](mailto:security@planka.group).
+1. Packages the Lambda functions
+2. Runs Terraform
+3. Creates or updates AWS resources
+4. Configures the API URL
+5. Uploads the frontend to the S3 website bucket
 
-**Note:** We do NOT offer any public support via email, please use GitHub.
+A separate Jenkins pipeline is provided to destroy the Terraform-managed infrastructure.
 
-**Join our community:** Get help, share ideas, or contribute on our [Discord server](https://discord.gg/WqqYNd7Jvt).
+## Project Structure
 
-## License
+```text
+app/
+├── functions/
+│   ├── upload/
+│   │   └── lambda_function.py
+│   └── process/
+│       └── lambda_function.py
+├── layers/
+│   └── layer.zip
+└── ui/
+    ├── icons/
+    ├── index.html
+    └── style.css
 
-PLANKA is [fair-code](https://faircode.io) distributed under the [Fair Use License](https://github.com/plankanban/planka/blob/master/LICENSES/PLANKA%20Community%20License%20EN.md) and [PLANKA Pro/Enterprise License](https://github.com/plankanban/planka/blob/master/LICENSES/PLANKA%20Commercial%20License%20EN.md).
-
-- **Source Available:** The source code is always visible
-- **Self-Hostable:** Deploy and host it anywhere
-- **Extensible:** Customize with your own functionality
-- **Enterprise Licenses:** Available for additional features and support
-
-For more details, check the [License Guide](https://github.com/plankanban/planka/blob/master/LICENSES/PLANKA%20License%20Guide%20EN.md).
+Jenkinsfile.deploy
+Jenkinsfile.destroy
