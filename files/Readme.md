@@ -13,7 +13,8 @@ _All-in-One PDF Tools — Lock, Unlock, Merge & Split PDFs directly in your brow
 
 </div>
 
-![PDFTools Architecture](docs/architecture.png)
+<img width="1774" height="887" alt="ChatGPT Image Aug 15, 2026, 05_36_00 PM" src="https://github.com/user-attachments/assets/f83fe831-d2f8-49d5-8c80-c8b3cb6cf402" />
+
 
 ## Key Features
 
