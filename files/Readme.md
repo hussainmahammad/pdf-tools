@@ -59,22 +59,3 @@ The deployment pipeline automatically:
 5. Uploads the frontend to the S3 website bucket
 
 A separate Jenkins pipeline is provided to destroy the Terraform-managed infrastructure.
-
-## Project Structure
-
-```text
-app/
-├── functions/
-│   ├── upload/
-│   │   └── lambda_function.py
-│   └── process/
-│       └── lambda_function.py
-├── layers/
-│   └── layer.zip
-└── ui/
-    ├── icons/
-    ├── index.html
-    └── style.css
-
-Jenkinsfile.deploy
-Jenkinsfile.destroy
